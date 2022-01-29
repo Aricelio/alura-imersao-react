@@ -23,6 +23,7 @@ export default function PaginaInicial() {
     //const username = 'Aricelio';
     const [username, setUsername] = React.useState('Aricelio');
     const roteamento = useRouter();
+    const imagem = "https://github.com/Aricelio.png"
   
     return (
       <>        
@@ -55,7 +56,7 @@ export default function PaginaInicial() {
               as="form"
               onSubmit={ function(infosDoEvento){
                 infosDoEvento.preventDefault();
-                console.log("Form submetido");
+                //console.log("Form submetido");
                 //window.location.href = '/chat';
                 roteamento.push('/chat');
               }}
@@ -93,13 +94,11 @@ export default function PaginaInicial() {
                   
                   // Valor
                   const valor = event.target.value;
-
-                  //const tamanho = valor.size;
-                  //console.log("Tamanho: ", tamanho);
-
-                  // Troca o valor da variavel através do React
-                  setUsername(valor);
                   
+                  console.log("Tamanho: ", valor.length);
+
+                  // Troca o valor da variavel através do React                  
+                  setUsername(valor);
                 }}
 
                 fullWidth
@@ -149,7 +148,9 @@ export default function PaginaInicial() {
                   borderRadius: '50%',
                   marginBottom: '16px',
                 }}
-                src={`https://github.com/${username}.png`}
+                src={
+                  username.length > 2 ? `https://github.com/${username}.png` : imagem
+                }
               />
               <Text
                 variant="body4"
