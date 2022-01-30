@@ -1,31 +1,65 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
+import { createClient } from '@supabase/supabase-js';
 import React from 'react';
 import appConfig from '../config.json';
 
-export default function ChatPage() {
-    // Sua lógica vai aqui
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzU1NDY4OCwiZXhwIjoxOTU5MTMwNjg4fQ.iiO74FqfvMW1d9Bo5WMFwFM8ssKITNpG5_2JKvPe67Q';
+const SUPABASE_URL = 'https://lvemddmltfuaanazkvze.supabase.co';
+const supabaseClient  = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/*
+const dadosDoSupabase = supabaseClient
+    .from('mensagens')
+    .select('*')
+    .then((dados) => {
+        console.log('Dados da consulta:',dados);
+    });
+*/
+
+export default function ChatPage() {    
     const [mensagem, setMensagem ] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
 
+    // Usa o useEffect para trazer os dados do Supabase
+    React.useEffect(() => {
+        supabaseClient
+            .from('mensagens')
+            .select('*')
+            .order('id', { ascending: false })
+            .then(( { data } ) => {
+                //console.log('Dados da consulta:',dados);
+                setListaDeMensagens(data);
+            });
+    }, []);    
+
     // Função para tratar as novas mensagens
     function handleNovaMensagem(novaMensagem){
+        
         const mensagem = {
-            id: listaDeMensagens.length + 1,
+            //id: listaDeMensagens.length + 1,
             de: 'Aricelio', 
             texto: novaMensagem,
         };
 
-        // Add na lista de msgs, o que foi digitado
-        setListaDeMensagens([
-            mensagem,
-            ...listaDeMensagens            
-        ]);
+        // Faz a inserção da mensagem no Supabase
+        supabaseClient
+            .from('mensagens')
+            .insert([
+                mensagem
+            ])
+            .then(({ data }) => {                
+
+                // Add na lista de msgs, o que foi digitado
+                setListaDeMensagens([
+                    data[0],
+                    ...listaDeMensagens,
+                ]);
+            });
 
         // Limpa o TextField
         setMensagem('');
     }
-
-    // ./Sua lógica vai aqui
+    
     return (
         <Box
             styleSheet={{
@@ -134,7 +168,7 @@ function Header() {
 }
 
 function MessageList(props) {
-    console.log('MessageList', props.listaDeMensagens);
+    
     return (
         <Box
             tag="ul"
@@ -169,21 +203,31 @@ function MessageList(props) {
                             >
                                 <Image
                                     styleSheet={{
-                                        width: '20px',
-                                        height: '20px',
+                                        width: '40px',
+                                        height: '40px',
                                         borderRadius: '50%',
                                         display: 'inline-block',
                                         marginRight: '8px',
                                     }}
-                                    src={`https://github.com/Aricelio.png`}
+                                    src={`https://github.com/${mensagem.de}.png`}
+
+                                    // Finalizar a função...
+                                    onMouseEnter={function handler(event){
+                                        console.log("Mouse entrou: ", event);
+                                    }}
+
+                                    // Finalizar a função...
+                                    onMouseLeave={function handler(event){
+                                        console.log("Mouse saiu: ", event);
+                                    }}
                                 />
                                 <Text tag="strong">
-                                    {mensagem.de}
+                                    @{mensagem.de}
                                 </Text>
                                 <Text
                                     styleSheet={{
-                                        fontSize: '10px',
-                                        marginLeft: '8px',
+                                        fontSize: '20px',
+                                        //marginLeft: '4px',
                                         color: appConfig.theme.colors.neutrals[300],
                                     }}
                                     tag="span"
