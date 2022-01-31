@@ -1,22 +1,27 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
-import { createClient } from '@supabase/supabase-js';
 import React from 'react';
 import appConfig from '../config.json';
+import { useRouter } from 'next/router';
+import { createClient } from '@supabase/supabase-js';
+import { ButtonSendSticker } from '../src/components/ButtonSendSticker';
 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzU1NDY4OCwiZXhwIjoxOTU5MTMwNjg4fQ.iiO74FqfvMW1d9Bo5WMFwFM8ssKITNpG5_2JKvPe67Q';
 const SUPABASE_URL = 'https://lvemddmltfuaanazkvze.supabase.co';
 const supabaseClient  = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/*
-const dadosDoSupabase = supabaseClient
-    .from('mensagens')
-    .select('*')
-    .then((dados) => {
-        console.log('Dados da consulta:',dados);
-    });
-*/
+function escutaMensagensEmTempoReal(adicionaMensagem) {
+    return supabaseClient
+        .from('mensagens')
+        .on('INSERT', (respostaLive) => {
+            //console.log('Houve uma nova mensagem');
+            adicionaMensagem(respostaLive.new);
+        })
+        .subscribe();
+}
 
 export default function ChatPage() {    
+    const roteamento = useRouter();
+    const usuarioLogado = roteamento.query.username;
     const [mensagem, setMensagem ] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
 
@@ -26,10 +31,19 @@ export default function ChatPage() {
             .from('mensagens')
             .select('*')
             .order('id', { ascending: false })
-            .then(( { data } ) => {
+            .then(({ data }) => {
                 //console.log('Dados da consulta:',dados);
                 setListaDeMensagens(data);
             });
+
+        escutaMensagensEmTempoReal((novaMensagem) => {            
+            setListaDeMensagens((valorAtualDaLista) => {
+                return [
+                    novaMensagem,
+                    ...valorAtualDaLista,
+                ]
+            });
+        });
     }, []);    
 
     // Função para tratar as novas mensagens
@@ -37,7 +51,7 @@ export default function ChatPage() {
         
         const mensagem = {
             //id: listaDeMensagens.length + 1,
-            de: 'Aricelio', 
+            de: usuarioLogado, 
             texto: novaMensagem,
         };
 
@@ -46,15 +60,18 @@ export default function ChatPage() {
             .from('mensagens')
             .insert([
                 mensagem
-            ])
+            ])            
             .then(({ data }) => {                
 
                 // Add na lista de msgs, o que foi digitado
+                /*
                 setListaDeMensagens([
                     data[0],
                     ...listaDeMensagens,
                 ]);
+                */
             });
+            
 
         // Limpa o TextField
         setMensagem('');
@@ -142,6 +159,14 @@ export default function ChatPage() {
                                 color: appConfig.theme.colors.neutrals[200],
                             }}
                         />
+                        
+                        {/*Callback*/}
+                        <ButtonSendSticker 
+                            onStickerClick={(sticker) => {
+                                //console.log('[USANDO O COMPONENTE] Salva esse sticker no banco');
+                                handleNovaMensagem(':sticker:' + sticker);
+                            }}
+                        />
                     </Box>
                 </Box>
             </Box>
@@ -213,12 +238,12 @@ function MessageList(props) {
 
                                     // Finalizar a função...
                                     onMouseEnter={function handler(event){
-                                        console.log("Mouse entrou: ", event);
+                                        //console.log("Mouse entrou: ", event);
                                     }}
 
                                     // Finalizar a função...
                                     onMouseLeave={function handler(event){
-                                        console.log("Mouse saiu: ", event);
+                                        //console.log("Mouse saiu: ", event);
                                     }}
                                 />
                                 <Text tag="strong">
@@ -235,7 +260,15 @@ function MessageList(props) {
                                     {(new Date().toLocaleDateString())}
                                 </Text>
                             </Box>
-                            {mensagem.texto}
+                            {
+                                mensagem.texto.startsWith(':sticker:') 
+                                ? (
+                                    <Image src={mensagem.texto.replace(':sticker:','')} />
+                                )
+                                : (
+                                    mensagem.texto
+                                )
+                            }                            
                         </Text>
                     );
             })}            

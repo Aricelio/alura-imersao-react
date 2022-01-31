@@ -55,10 +55,9 @@ export default function PaginaInicial() {
             <Box
               as="form"
               onSubmit={ function(infosDoEvento){
-                infosDoEvento.preventDefault();
-                //console.log("Form submetido");
+                infosDoEvento.preventDefault();                
                 //window.location.href = '/chat';
-                roteamento.push('/chat');
+                roteamento.push(`/chat?username=${username}`);
               }}
               styleSheet={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -95,7 +94,7 @@ export default function PaginaInicial() {
                   // Valor
                   const valor = event.target.value;
                   
-                  console.log("Tamanho: ", valor.length);
+                  //console.log("Tamanho: ", valor.length);
 
                   // Troca o valor da variavel através do React                  
                   setUsername(valor);
